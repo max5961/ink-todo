@@ -1,4 +1,4 @@
-A TUI todo list.
+## A TUI todo list.
 
 ### Usage
 ----------
