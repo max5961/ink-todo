@@ -136,12 +136,26 @@ export function useTasks(tasks: Tasks) {
 
     function enterInsert(): void {
         if (!state.normal) return;
-        setState({ ...state, normal: false });
+
+        let editText: string | null = null;
+        if (state.idx < state.tasks.length) {
+            editText = state.tasks[state.idx].name;
+        }
+
+        setState({
+            ...state,
+            normal: false,
+            editText: editText ? editText : "",
+        });
     }
 
     function enterNormal(): void {
         if (state.normal) return;
-        setState({ ...state, normal: true });
+
+        setState({
+            ...state,
+            normal: true,
+        });
     }
 
     function cycleOrder(): void {
