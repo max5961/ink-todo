@@ -68,14 +68,14 @@ export function useTasks(tasks: Tasks) {
                 cycleOrder();
             }
 
-            // navigation
+            // Navigation
             if (state.idx > 0) {
                 if (key.upArrow || input === "k") {
                     setState({ ...state, idx: --state.idx });
                 }
             }
 
-            // navigation
+            // Navigation
             if (state.idx < state.tasks.length) {
                 if (key.downArrow || input === "j") {
                     setState({ ...state, idx: ++state.idx });
@@ -126,7 +126,7 @@ export function useTasks(tasks: Tasks) {
     }
 
     function handleEnterNormal(): void {
-        // Last index is the add button, anything previos is task
+        // Last index is the add button, anything previous is a task
         if (state.idx === state.tasks.length) {
             addTask();
         } else {
