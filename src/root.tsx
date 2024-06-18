@@ -4,6 +4,8 @@ import { render } from "ink";
 import App from "./App.js";
 import fs from "fs/promises";
 import path from "path";
+import app from "./server.js";
+import fetch from "node-fetch";
 
 async function preCheck(): Promise<void> {
     const files: string[] = await fs.readdir(path.join(DB.PATH, "../"));
@@ -14,9 +16,22 @@ async function preCheck(): Promise<void> {
 
 async function entry(): Promise<void> {
     await preCheck();
-    const tasks = (await DB.openDb()) as Tasks;
+
+    const response = await fetch(`http://localhost:${PORT}/api/tasks`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    const tasks = (await response.json()) as Tasks;
 
     render(<App tasks={tasks} />);
 }
+
+const PORT = 5050;
+export const toExit = app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
 
 entry();

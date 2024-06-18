@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useInput, useApp } from "ink";
 import DB, { Task, Tasks } from "../db/DB.js";
+import Util from "../common/Util.js";
 
 interface AppState {
     tasks: Task[];
@@ -23,7 +24,7 @@ export function useTasks(tasks: Tasks) {
 
     useInput((input, key) => {
         if (state.normal && input === "q") {
-            exit();
+            Util.exit(exit);
         }
 
         if ((!state.normal && key.escape) || key.return) {
@@ -142,8 +143,11 @@ export function useTasks(tasks: Tasks) {
     function handleEditTask(): void {
         if (state.editText === "") return enterNormal();
 
+        const prev: Task = state.tasks[state.idx];
+
         const newTask: Task = {
-            priority: state.tasks[state.idx].priority,
+            id: prev.id,
+            priority: prev.priority,
             name: state.editText,
         };
 
@@ -163,7 +167,10 @@ export function useTasks(tasks: Tasks) {
     function handleAddTask(): void {
         if (state.addText === "") return enterNormal();
 
+        const prev: Task = state.tasks[state.idx];
+
         const newTask: Task = {
+            id: prev.id,
             name: state.addText,
             priority: "low",
         };
