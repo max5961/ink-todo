@@ -7,7 +7,7 @@ export type Priority = "low" | "medium" | "high";
 export interface Task {
     name: string;
     priority: Priority;
-    id: string;
+    id?: string;
 }
 
 export type Tasks = Task[];
@@ -39,9 +39,24 @@ function createId(): string {
     return date;
 }
 
+function isTask(task: Task): boolean {
+    return (
+        "priority" in task &&
+        typeof task.priority === "string" &&
+        "name" in task &&
+        typeof task.name === "string"
+    );
+}
+
+function hasId(task: Task): boolean {
+    return isTask(task) && "id" in task && typeof task.id === "string";
+}
+
 export default {
     openDb,
     saveDb,
     createId,
     PATH,
+    isTask,
+    hasId,
 };

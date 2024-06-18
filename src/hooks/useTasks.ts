@@ -2,13 +2,15 @@ import { useState } from "react";
 import { useInput, useApp } from "ink";
 import DB, { Task, Tasks } from "../db/DB.js";
 import Util from "../common/Util.js";
+import Fetch from "./Fetch.js";
 
 interface AppState {
     tasks: Task[];
-    idx: number;
     normal: boolean;
     addText: string;
     editText: string;
+    idx: number;
+    order: "NONE" | "INC_AO" | "DEC_AO" | "PRIORITY_LH" | "PRIORITY_HL";
 }
 
 export function useTasks(tasks: Tasks) {
@@ -18,7 +20,9 @@ export function useTasks(tasks: Tasks) {
         normal: true,
         addText: "",
         editText: "",
+        order: "NONE",
     };
+
     const [state, setState] = useState(initialState);
     const { exit } = useApp();
 
@@ -36,43 +40,36 @@ export function useTasks(tasks: Tasks) {
                 enterInsert();
             }
 
+            // navigation
             if (state.idx > 0) {
                 if (key.upArrow || input === "k") {
                     setState({ ...state, idx: --state.idx });
                 }
             }
 
+            // navigation
             if (state.idx < state.tasks.length) {
                 if (key.downArrow || input === "j") {
                     setState({ ...state, idx: ++state.idx });
                 }
             }
 
+            // Modify tasks
             if (state.idx > state.tasks.length - 1 || state.idx < 0) return;
 
             if (input === "D") {
-                handleDeleteTask();
+                deleteTask();
             }
 
             if (input === "L") {
-                handleChangePriority("inc");
+                changePriority("inc");
             }
 
             if (input === "H") {
-                handleChangePriority("dec");
+                changePriority("dec");
             }
         }
     });
-
-    function cloneTasks(): Tasks {
-        const copy: Tasks = [];
-
-        for (let i = 0; i < state.tasks.length; ++i) {
-            copy.push({ ...state.tasks[i] });
-        }
-
-        return copy;
-    }
 
     function setText(newText: string, type: "EDIT" | "ADD"): void {
         const newState = { ...state };
@@ -97,10 +94,11 @@ export function useTasks(tasks: Tasks) {
     }
 
     function handleEnterNormal(): void {
+        // Last index is the add button, anything previos is task
         if (state.idx === state.tasks.length) {
-            handleAddTask();
+            addTask();
         } else {
-            handleEditTask();
+            editTask();
         }
     }
 
@@ -114,45 +112,50 @@ export function useTasks(tasks: Tasks) {
         setState({ ...state, normal: true });
     }
 
-    function handleChangePriority(direction: "inc" | "dec"): void {
+    async function changePriority(direction: "inc" | "dec"): Promise<void> {
         if (state.idx >= state.tasks.length) return;
 
-        const copy: Tasks = cloneTasks();
-        const currTask = copy[state.idx];
+        const task = { ...state.tasks[state.idx] };
 
-        if (direction === "inc" && currTask.priority !== "high") {
-            currTask.priority = currTask.priority === "low" ? "medium" : "high";
+        if (direction === "inc" && task.priority !== "high") {
+            task.priority = task.priority === "low" ? "medium" : "high";
         }
 
-        if (direction === "dec" && currTask.priority !== "low") {
-            currTask.priority = currTask.priority === "high" ? "medium" : "low";
+        if (direction === "dec" && task.priority !== "low") {
+            task.priority = task.priority === "high" ? "medium" : "low";
         }
 
-        setState({ ...state, tasks: copy });
-        DB.saveDb(copy);
+        const newTasks = await Fetch.sendReq("PUT", task);
+
+        if (newTasks) {
+            setState({ ...state, tasks: newTasks });
+        }
     }
 
-    function handleDeleteTask(): void {
-        const copy: Tasks = cloneTasks();
-        copy.splice(state.idx, 1);
+    async function deleteTask(): Promise<void> {
+        const toDelete = { ...state.tasks[state.idx] } as Task;
 
-        setState({ ...state, tasks: copy });
-        DB.saveDb(copy);
+        const newTasks = await Fetch.sendReq("DELETE", toDelete);
+
+        if (newTasks) {
+            setState({ ...state, tasks: newTasks });
+        }
     }
 
-    function handleEditTask(): void {
+    async function editTask(): Promise<void> {
         if (state.editText === "") return enterNormal();
 
         const prev: Task = state.tasks[state.idx];
 
-        const newTask: Task = {
+        const task: Task = {
             id: prev.id,
             priority: prev.priority,
             name: state.editText,
         };
 
-        const newTasks = cloneTasks();
-        newTasks[state.idx] = newTask;
+        const newTasks = await Fetch.sendReq("PUT", task);
+
+        if (!newTasks) return;
 
         setState({
             ...state,
@@ -160,22 +163,20 @@ export function useTasks(tasks: Tasks) {
             normal: true,
             editText: "",
         });
-
-        DB.saveDb(newTasks);
     }
 
-    function handleAddTask(): void {
+    async function addTask(): Promise<void> {
         if (state.addText === "") return enterNormal();
 
-        const prev: Task = state.tasks[state.idx];
-
         const newTask: Task = {
-            id: prev.id,
+            id: undefined,
             name: state.addText,
             priority: "low",
         };
 
-        const newTasks = [...cloneTasks(), newTask];
+        const newTasks = await Fetch.sendReq("POST", newTask);
+
+        if (!newTasks) return;
 
         setState({
             ...state,
@@ -183,8 +184,6 @@ export function useTasks(tasks: Tasks) {
             addText: "",
             tasks: newTasks,
         });
-
-        DB.saveDb(newTasks);
     }
 
     return { state, setAddText, setEditText };

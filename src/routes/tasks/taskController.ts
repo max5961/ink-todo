@@ -38,10 +38,10 @@ function getTaskById(req: Req, res: Res): void {
 
 /* Update a task and Respond with all tasks */
 function putTask(req: Req, res: Res): void {
-    const updatedTask = req.body.task as Task | undefined;
+    const task = req.body.task as Task | undefined;
 
-    if (!updatedTask) {
-        res.send(404).json({ msg: "req.body.task missing" });
+    if (!task || !DB.isTask(task) || !DB.hasId(task)) {
+        res.status(404).json({ msg: "req.body.task missing or invalid" });
         return;
     }
 
@@ -50,9 +50,9 @@ function putTask(req: Req, res: Res): void {
             let updated = false;
 
             for (let i = 0; i < tasks.length; ++i) {
-                if (updatedTask.id === tasks[i].id) {
+                if (task.id === tasks[i].id) {
                     updated = true;
-                    tasks[i] = updatedTask;
+                    tasks[i] = task;
                 }
             }
 
@@ -76,16 +76,18 @@ function putTask(req: Req, res: Res): void {
 
 /* Add a task and Respond will all tasks including the added task */
 function postTask(req: Req, res: Res): void {
-    const newTask = req.body.task as Task | undefined;
+    const task = req.body.task as Task | undefined;
 
-    if (!newTask) {
-        res.send(404).json({ msg: "req.body.task missing" });
+    if (!task || !DB.isTask(task)) {
+        res.status(404).json({ msg: "req.body.task missing or invalid" });
         return;
     }
 
+    task.id = DB.createId();
+
     DB.openDb()
         .then((tasks) => {
-            tasks.push(newTask);
+            tasks.push(task);
             return tasks;
         })
         .then((tasks) => {
@@ -100,7 +102,15 @@ function postTask(req: Req, res: Res): void {
 
 /* Delete a task and respond with all tasks (excluding deleted) */
 function deleteTask(req: Req, res: Res): void {
-    const id: string = req.params.id;
+    const task = req.body.task as Task;
+
+    if (!task || !DB.hasId(task)) {
+        res.status(404).json({ msg: "req.body.task missing or invalid" });
+        return;
+    }
+
+    // DB.hasId checks for valid id
+    const id: string = task.id!;
 
     DB.openDb()
         .then((tasks) => {
