@@ -3,7 +3,14 @@
 ### Installation
 ```sh
 https://github.com/max5961/ink-todo.git
-sudo npm install -g
+cd ink-todo
+node ./setup.mjs
+```
+
+### Uninstall
+Move to directory where this was downloaded and run
+```
+sudo npm uninstall -g
 ```
 
 ### Usage
