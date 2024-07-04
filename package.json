@@ -26,6 +26,9 @@
         "typescript": "^5.4.5"
     },
     "type": "module",
+    "files": [
+        "dist/*"
+    ],
     "bin": {
         "todo": "./bin/root.mjs"
     }
