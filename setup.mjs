@@ -22,7 +22,7 @@ prompt([
     })
     .then(() => {
         return new Promise((res, rej) => {
-            exec(command, (err, stdout, stderr) => {
+            exec("sudo npm install -g", (err, stdout, stderr) => {
                 console.log(command);
                 if (err) {
                     console.error(err);
