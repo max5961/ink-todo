@@ -2,13 +2,15 @@
 
 ### Installation
 ```sh
-https://github.com/max5961/ink-todo.git
+git clone https://github.com/max5961/ink-todo.git
 cd ink-todo
+npm install
+npm run build
 node ./setup.mjs
 ```
 
 ### Uninstall
-Move to directory where this was downloaded and run
+Move to directory where this was cloned into and run
 ```
 sudo npm uninstall -g
 ```

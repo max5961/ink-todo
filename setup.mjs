@@ -2,7 +2,7 @@
 
 import fs from "fs/promises";
 import path from "path";
-import { exec } from "child_process";
+import { exec, execSync } from "child_process";
 import inquirer from "inquirer";
 
 const prompt = inquirer.createPromptModule();
@@ -21,12 +21,18 @@ prompt([
         return updatePackageJson(executable);
     })
     .then(() => {
-        const commands = [
-            "npm install",
-            "npm run build",
-            "sudo npm install -g",
-        ];
-        execShellCommands(commands);
+        return new Promise((res, rej) => {
+            exec(command, (err, stdout, stderr) => {
+                console.log(command);
+                if (err) {
+                    console.error(err);
+                    rej(err);
+                }
+
+                console.log(stdout);
+                res(stdout || stderr);
+            });
+        })
     })
     .catch((err) => {
         console.error(err);
@@ -35,8 +41,9 @@ prompt([
         );
     });
 
-const packageFile = path.join(process.env.PWD, "package.json");
 async function updatePackageJson(executableName) {
+    const packageFile = path.join(process.env.PWD, "package.json");
+
     // get package.json contents
     const packageJson = JSON.parse(await fs.readFile(packageFile, "utf-8"));
 
@@ -56,18 +63,3 @@ async function updatePackageJson(executableName) {
     );
 }
 
-function execShellCommands(commands) {
-    if (commands.length === 0) return;
-
-    exec(commands[0], (err, stdout, stderr) => {
-        console.log(commands[0]);
-        if (err) {
-            console.error(err);
-            return;
-        }
-
-        console.log(stdout);
-
-        execShellCommands(commands.slice(1));
-    });
-}
