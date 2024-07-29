@@ -1,9 +1,11 @@
 import React from "react";
-import { Text, Box, useApp } from "ink";
+import { Text, Box } from "ink";
 import { Task, Tasks } from "./db/DB.js";
 import { useTasks } from "./hooks/useTasks.js";
 import TextInput from "ink-text-input";
+import { OrderTasks } from "./hooks/useTasks.js";
 import { usePriority } from "./hooks/usePriority.js";
+import { PORT } from "./root.js";
 
 export default function App({ tasks }: { tasks: Tasks }): React.ReactNode {
     const { state, setAddText, setEditText } = useTasks(tasks);
@@ -51,7 +53,45 @@ export default function App({ tasks }: { tasks: Tasks }): React.ReactNode {
         return elements;
     }
 
-    return <>{getList()}</>;
+    return (
+        <>
+            <OrderBox order={state.order.type} />
+            {getList()}
+        </>
+    );
+}
+
+function OrderBox({ order }: { order: OrderTasks }): React.ReactNode {
+    let tc = "none";
+    let color = "";
+    let sym = "";
+
+    if (order === "PRIORITY_HL") {
+        tc = "Priority H-L";
+        sym = "";
+        color = "red";
+    } else if (order === "PRIORITY_LH") {
+        tc = "Priority L-H";
+        sym = "";
+        color = "green";
+    } else if (order === "DEC_AO") {
+        tc = "Z-A";
+        sym = "";
+        color = "red";
+    } else if (order === "INC_AO") {
+        tc = "A-Z";
+        sym = "";
+        color = "green";
+    }
+
+    return (
+        <Box width="50%" justifyContent="space-between">
+            <Text>
+                Order: <Text color={color}>{`${tc} ${sym}`}</Text>
+            </Text>
+            <Text>{`Server port: ${PORT}`}</Text>
+        </Box>
+    );
 }
 
 function TaskView({

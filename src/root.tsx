@@ -29,9 +29,9 @@ async function entry(): Promise<void> {
     render(<App tasks={tasks} />);
 }
 
-const PORT = 5050;
+export const PORT = 5050;
 export const toExit = app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    // console.log(`Server running on port ${PORT}`);
 });
 
 entry();
